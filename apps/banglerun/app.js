@@ -1,6 +1,7 @@
 /** Global constants */
 const DEG_TO_RAD = Math.PI / 180;
 const EARTH_RADIUS = 6371008.8;
+const KM_TO_MI = 0.6213712;
 
 /** Utilities for handling vectors */
 class Vector {
@@ -184,7 +185,10 @@ function formatClock(date) {
 }
 
 function formatDistance(m) {
-  return (m / 1000).toFixed(2) + ' km';
+  if (s.units_in_km) {
+    return (m / 1000).toFixed(2) + ' km';
+  }
+  return (m * KM_TO_MI / 1000).toFixed(2) + ' mi';
 }
 
 function formatTime(s) {
@@ -198,9 +202,13 @@ function formatSpeed(kmh) {
   if (kmh <= 0.6) {
     return `__'__"`;
   }
-  const skm = 3600 / kmh;
-  const min = Math.floor(skm / 60);
-  const sec = Math.floor(skm % 60);
+  if (s.units_in_km) {
+    const speed = 3600 / kmh;
+  } else {
+    const speed = 3600 / (kmh * KM_TO_MI);
+  }
+  const min = Math.floor(speed / 60);
+  const sec = Math.floor(speed % 60);
   return ('0' + min).substr(-2) + `'` + ('0' + sec).substr(-2) + `"`;
 }
 
@@ -299,6 +307,9 @@ function stop() {
   drawBackground();
   draw();
 }
+
+let s = require('Storage').readJSON('banglerun.json',1) ||
+  {'units_in_km': true};
 
 Bangle.on('GPS', handleGps);
 Bangle.on('HRM', handleHrm);
